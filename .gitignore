@@ -1,0 +1,4 @@
+client/vanila/node_modules/
+client/vanila/package-lock.json
+client/vanila/dist/*.js
+rotos/*.js
