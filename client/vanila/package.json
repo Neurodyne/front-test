@@ -1,0 +1,11 @@
+{
+  "name": "grpc-web-simple-example",
+  "version": "0.1.0",
+  "description": "gRPC-Web simple example",
+  "devDependencies": {
+    "google-protobuf": "^3.17.1",
+    "grpc-web": "^1.2.1",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.0"
+  }
+}
