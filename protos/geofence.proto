@@ -1,0 +1,160 @@
+syntax = "proto3";
+
+package api;
+
+import "Api.proto";
+
+/*
+    Создано по задаче https://jira.t1-group.ru/browse/IT2019-6461
+    Макет формы: https://jira.t1-group.ru/secure/attachment/113648/UI%20%D0%BC%D0%B0%D1%82%D1%80%D0%B8%D1%86%D1%8B%20%D1%80%D0%B5%D0%B3%D1%83%D0%BB%D1%8F%D1%80%D0%BD%D0%BE%D1%81%D1%82%D0%B8.pdf
+    Макет формы с цветовой маркировкой: https://jira.t1-group.ru/secure/thumbnail/114033/_thumb_114033.png
+*/
+
+service Geofence {
+  rpc Ping(PingRequest) returns (PingResponse);
+
+  /*
+    Метод возвращает информацию о наряде (статика + рассчитанная статистика)
+  */
+  rpc GetOrderInfo(OrderInfoRequest) returns (Order);
+
+  /*
+    Возвращает остановочные пункты (заголовок матрицы) и статистику по регулярности (footer матрицы)
+  */
+  rpc GetRouteVariantInfo(RouteVariantInfoRequest) returns (RouteVariantInfo);
+
+  /*
+    Возвращает возможные треки для конкретного варианта движения (матрица регулярности)
+  */
+  rpc GetRouteVariantTracks(RouteVariantTracksRequest) returns (RouteVariantTracks);
+
+  /*
+    Метод запускает пересчёт треков (например, для забытого ТС)
+  */
+  rpc RecalculateDeviceTracks(RecalculateDeviceTracksRequest) returns (RecalculateDeviceTracksResponse);
+}
+
+message PingRequest {}
+
+message PingResponse {
+  string Message = 1;
+}
+
+message OrderInfoRequest {
+  string OrderUUID = 1;
+}
+
+message RouteVariantInfoRequest {
+  string OrderUUID = 1;
+  string RouteVariantUUID = 2;
+  bool IsForwardDirection = 3;
+}
+
+message RouteVariantInfo {
+  repeated StopPoint StopPoints = 1;
+}
+
+message StopPoint {
+  string UUID = 1;
+  string Title = 2;
+  int64 FirstRunPlannedTime = 3;
+
+  // Рассчитанная регулярность в контексте варианта движения
+  int64 Regularity = 4;
+}
+
+message RouteVariantTracksRequest {
+  string OrderUUID = 1;
+  string RouteVariantUUID = 2;
+  bool IsForwardDirection = 3;
+
+  // For future use
+  int64 Limit = 4;
+  int64 Offset = 5;
+}
+
+message RouteVariantTracks {
+  repeated Track Tracks = 1;
+  int64 TotalTracks = 2;
+}
+
+message Order {
+  string UUID = 1;
+  string Number = 2;
+  string CarrierUUID = 3;
+  string CarrierName = 4;
+  int64 Date = 5;
+  OrderInfo OrderInfo = 6;
+  OrderStats OrderStats = 7;
+  repeated Vehicle Vehicles = 8;
+  repeated RouteVariant RouteVariants = 9;
+}
+
+message OrderInfo {
+  // Номер маршрута
+  string RouteNumber = 1;
+  // Наименование маршрута
+  string RouteName = 2;
+  // Плановая длина прямого рейса в метрах
+  int64 RouteForwardLength = 3;
+  // Плановая длина обратного рейса в метрах
+  int64 RouteBackwardLength = 4;
+  // Минимальное количество ТС, необходимое для обеспечения работы маршрута
+  int64 MinVehicleCount = 5;
+}
+
+message OrderStats {
+  // Количество ТС за время действия план-наряда
+  int64 VehicleCount = 1;
+
+  // Количество всех зачтенных рейсов
+  int64 CompletedTrackCount = 2;
+  // Количество зачтенных рейсов, у которых посещения остановок в пределах нормы (регулярные рейсы)
+  int64 RegularTrackCount = 3;
+
+  // Количество посещений остановок по зачтенным рейсам
+  int64 StopPointVisitCount = 4;
+  // Количество регулярных посещений остановок по зачтенным рейсам
+  int64 RegularStopPointVisitCount = 5;
+
+  // Время в дороге для всех зачтенных рейсов в секундах
+  int64 TotalWorkTime = 6;
+  // Сумма плановых длин зачтенных рейсов в метрах
+  int64 TotalLength = 7;
+
+  // Регулярность рейсов: количество регулярных рейсов / количество выполненых рейсов
+  double RouteRegularity = 8;
+  // Поостановочная регулярность: количество регулярных посещений остановок / количество посещений остановок
+  double StopPointRegularity = 9;
+  // Индекс обеспечения: количество ТС на линии / минимальное количество ТС
+  double RouteProvisionIndex = 10;
+}
+
+message RouteVariant {
+  string UUID = 1;
+  bool IsForwardDirection = 2;
+  string Label = 3;
+}
+
+message Visit {
+  string UUID = 1;
+  int64 PlannedVisitTime = 2;
+  int64 FactVisitTime = 3;
+}
+
+message Track {
+  Vehicle Vehicle = 1;
+  repeated Visit Visits = 2;
+  int64 Weight = 3;
+  bool Completed = 4;
+  bool Regular = 5;
+  int64 StartTime = 6;
+  int64 EndTime = 7;
+}
+
+message RecalculateDeviceTracksRequest {
+  string DeviceCode = 1;
+  int64 Date = 2;
+}
+
+message RecalculateDeviceTracksResponse {}
